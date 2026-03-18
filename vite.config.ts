@@ -8,5 +8,5 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: '/pokemonteambuilder/',
+  base: '/pokemon-team-builder/',
 })
