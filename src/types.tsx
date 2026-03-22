@@ -14,6 +14,7 @@ export interface Type {
   id: number,
   name: string,
   sprite: string,
+  pokemon: Set<string>,
   type_effectiveness: {
     offense: Map<string, number>,
     defense: Map<string, number>,

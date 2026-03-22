@@ -36,6 +36,32 @@ function FilterInput({ filterText, onFilterTextChange, }: {
   )
 }
 
+function TypeFilterDropdown({ value, onChange, placeholder, id }: {
+  value: string,
+  onChange: (text: string) => void,
+  placeholder: string,
+  id: string,
+}) {
+  const { allTypes } = useContext(DataContext);
+  const typeNames = allTypes.map((t) => t.name);
+
+  return (
+    <div className="w-full">
+      <input
+        type="text"
+        list={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full px-4 py-2 my-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pokemon-red"
+      />
+      <datalist id={id}>
+        {typeNames.map((name) => <option key={name} value={name.charAt(0).toUpperCase() + name.slice(1)} />)}
+      </datalist>
+    </div>
+  )
+}
+
 function Paginate({ page, pageCount, onPageChange }: {
   page: number,
   pageCount: number,
@@ -112,8 +138,10 @@ function PokemonTable({ data }: { data: APIData[] }) {
 
 export function FilterablePokemonTable() {
   const [filterText, setFilterText] = useState('');
+  const [type1, setType1] = useState('');
+  const [type2, setType2] = useState('');
   const [page, setPage] = useState(0);
-  const { allPokemon } = useContext(DataContext);
+  const { allPokemon, allTypes } = useContext(DataContext);
 
   const POKEMON_PER_PAGE = 10;
 
@@ -122,10 +150,27 @@ export function FilterablePokemonTable() {
     setPage(0);
   }
 
+  function handleType1Change(text: string) {
+    setType1(text);
+    setPage(0);
+  }
+
+  function handleType2Change(text: string) {
+    setType2(text);
+    setPage(0);
+  }
+
+  const matchedType1 = allTypes.find((t) => t.name.toLowerCase() === type1.toLowerCase());
+  const matchedType2 = allTypes.find((t) => t.name.toLowerCase() === type2.toLowerCase());
+
   // Filter out special pokemon (id > 10000)
   const filteredPokemon = allPokemon.filter((p) => {
     const parts: string[] = p.url.split('/');
-    return +parts[parts.length - 2] <= 10000 && p.name.toLowerCase().includes(filterText.toLowerCase())
+    if (+parts[parts.length - 2] > 10000) return false;
+    if (!p.name.toLowerCase().includes(filterText.toLowerCase())) return false;
+    if (matchedType1 && !matchedType1.pokemon.has(p.name)) return false;
+    if (matchedType2 && !matchedType2.pokemon.has(p.name)) return false;
+    return true;
   });
 
   const paginatedPokemon = filteredPokemon.slice(page * POKEMON_PER_PAGE, (page + 1) * POKEMON_PER_PAGE);
@@ -133,6 +178,10 @@ export function FilterablePokemonTable() {
   return (
     <div className="w-3/4 mx-auto">
       <FilterInput filterText={filterText} onFilterTextChange={handleFilterTextChange} />
+      <div className="flex gap-2">
+        <TypeFilterDropdown value={type1} onChange={handleType1Change} placeholder="Type 1" id="type1" />
+        <TypeFilterDropdown value={type2} onChange={handleType2Change} placeholder="Type 2" id="type2" />
+      </div>
       <PokemonTable data={paginatedPokemon} />
       <Paginate page={page} pageCount={Math.ceil(filteredPokemon.length / POKEMON_PER_PAGE)} onPageChange={setPage} />
     </div>
