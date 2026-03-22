@@ -5,7 +5,7 @@ export interface APIData {
 
 export interface Pokemon {
   id: number,
-  name: string,
+  species: string,
   sprite: string,
   types: Type[]
 }

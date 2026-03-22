@@ -21,6 +21,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [allPokemon, setAllPokemon] = useState<APIData[]>([]);
 	const [allTypes, setAllTypes] = useState<Type[]>([]);
   const [allPokedexes, setAllPokedexes] = useState<Pokedex[]>([]);
+  const [idToSpecies, setIdToSpecies] = useState<Map<number, string>>(new Map());
 
   const TYPE_COUNT = 18;
 
@@ -54,7 +55,10 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const pdxResponse = await fetch(pdx.url);
           const pdxJson = await pdxResponse.json();
 
-          const displayName = pdxJson.name.charAt(0).toUpperCase() + pdxJson.name.slice(1);
+          const displayName = pdxJson.name
+            .split('-')
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
 
           const pokemon = new Map<string, number>(
             pdxJson.pokemon_entries.map((e: { entry_number: number; pokemon_species: { name: string } }) => [
@@ -68,14 +72,23 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
       );
 
       setAllPokedexes(pokedexes);
+
+      const nationalPokedex = pokedexes.find((p) => p.name.toLowerCase() === 'national');
+      if (nationalPokedex) {
+        const speciesMap = new Map<number, string>();
+        nationalPokedex.pokemon.forEach((entryNumber, speciesName) => {
+          speciesMap.set(entryNumber, speciesName);
+        });
+        setIdToSpecies(speciesMap);
+      }
     }
 
     fetchData();
   }, []);
 
   const contextValue = useMemo(() => ({
-    allPokemon, allTypes, allPokedexes
-  }), [allPokemon, allTypes, allPokedexes]);
+    allPokemon, allTypes, allPokedexes, idToSpecies
+  }), [allPokemon, allTypes, allPokedexes, idToSpecies]);
 
   return (
     <DataContext.Provider value={contextValue}>

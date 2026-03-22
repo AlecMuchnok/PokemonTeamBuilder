@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import type { APIData, Pokemon, Pokedex, Type } from './types';
 import { DataContext, TeamContext } from './AppContext';
+import { formatPokemonName } from './utilities';
 
 function PokemonRow({ pokemon, displayNumber }: { pokemon: Pokemon, displayNumber: number }) {
   const { team, onPokemonClick } = useContext(TeamContext);
@@ -12,8 +13,8 @@ function PokemonRow({ pokemon, displayNumber }: { pokemon: Pokemon, displayNumbe
   return (
     <tr key={pokemon.id} className={"h-20 hover:bg-gray-100" + (team.some((p) => p.id === pokemon.id) ? " bg-gray-300" : "")} onClick={() => onPokemonClick(pokemon)}>
       <td>{displayNumber}</td>
-      <td className="flex items-center justify-center"><img className="max-w-15 max-h-15 object-contain" src={pokemon.sprite} alt={pokemon.name} /></td>
-      <td>{pokemon.name ? pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1) : ''}</td>
+      <td className="flex items-center justify-center"><img className="max-w-15 max-h-15 object-contain" src={pokemon.sprite} alt={pokemon.species} /></td>
+      <td>{formatPokemonName(pokemon.species)}</td>
       <td><div className="h-full mx-1 flex items-center justify-center">{pokemon.types.map((type) => <img key={type.id} className="max-w-30 max-h-5 object-contain" src={type.sprite} alt={type.name} />)}</div></td>
     </tr>
   )
@@ -125,7 +126,7 @@ function PokemonTable({ data, pokedex }: { data: APIData[], pokedex: Pokedex | n
 
         pokemonList.push({
           id: json.id,
-          name: json.name,
+          species: json.species.name,
           sprite: json.sprites.front_default,
           types: types,
         });
@@ -150,7 +151,7 @@ function PokemonTable({ data, pokedex }: { data: APIData[], pokedex: Pokedex | n
         </thead>
         <tbody className="divide-y">
           {pokemon.map((p) => (
-            <PokemonRow key={p.name} pokemon={p} displayNumber={pokedex?.pokemon.get(p.name) ?? p.id} />
+            <PokemonRow key={p.species} pokemon={p} displayNumber={pokedex?.pokemon.get(p.species) ?? p.id} />
           ))}
         </tbody>
       </table>
@@ -164,7 +165,7 @@ export function FilterablePokemonTable() {
   const [type2, setType2] = useState('');
   const [pokedex, setPokedex] = useState('National');
   const [page, setPage] = useState(0);
-  const { allPokemon, allTypes, allPokedexes } = useContext(DataContext);
+  const { allPokemon, allTypes, allPokedexes, idToSpecies } = useContext(DataContext);
 
   const POKEMON_PER_PAGE = 10;
 
@@ -195,16 +196,24 @@ export function FilterablePokemonTable() {
   // Filter out special pokemon (id > 10000)
   const filteredPokemon = allPokemon.filter((p) => {
     const parts: string[] = p.url.split('/');
-    if (+parts[parts.length - 2] > 10000) return false;
-    if (!p.name.toLowerCase().includes(filterText.toLowerCase())) return false;
+    const id = +parts[parts.length - 2];
+    if (id > 10000) return false;
+    const species = idToSpecies.get(id) ?? p.name;
+    if (!species.toLowerCase().includes(filterText.toLowerCase())) return false;
     if (matchedType1 && !matchedType1.pokemon.has(p.name)) return false;
     if (matchedType2 && !matchedType2.pokemon.has(p.name)) return false;
-    if (matchedPokedex && !matchedPokedex.pokemon.has(p.name)) return false;
+    if (matchedPokedex && !matchedPokedex.pokemon.has(species)) return false;
     return true;
   });
 
   const sortedPokemon = matchedPokedex
-    ? [...filteredPokemon].sort((a, b) => (matchedPokedex.pokemon.get(a.name) ?? 0) - (matchedPokedex.pokemon.get(b.name) ?? 0))
+    ? [...filteredPokemon].sort((a, b) => {
+        const idA = +a.url.split('/').at(-2)!;
+        const idB = +b.url.split('/').at(-2)!;
+        const speciesA = idToSpecies.get(idA) ?? a.name;
+        const speciesB = idToSpecies.get(idB) ?? b.name;
+        return (matchedPokedex.pokemon.get(speciesA) ?? 0) - (matchedPokedex.pokemon.get(speciesB) ?? 0);
+      })
     : filteredPokemon;
 
   const paginatedPokemon = sortedPokemon.slice(page * POKEMON_PER_PAGE, (page + 1) * POKEMON_PER_PAGE);
