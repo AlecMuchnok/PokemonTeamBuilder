@@ -51,13 +51,14 @@ export function TeamCoverage() {
 
   return (
     <div className="w-100 mx-auto">
-      <label className="block text-sm font-medium text-gray-700 mb-1">Coverage (Offensive/Defensive)</label>
+      <p className="text-sm text-gray-600 mb-2">Left bubble: super effective move<br/>Right bubble: resistance/immunity</p>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Team Coverage</label>
       <div className="grid grid-cols-2 gap-0 w-100 mx-auto">
         {allTypes.map((type) => {
           const offense: number = teamCoverage.get(type.name)?.offense ?? 1;
           const defense: number = teamCoverage.get(type.name)?.defense ?? 1;
-          const offenseColor = offenseHighlights.has(type.name) ? 'bg-yellow-400' : offense > 1 ? 'bg-green-500' : offense < 1 ? 'bg-red-500' : '';
-          const defenseColor = defenseHighlights.has(type.name) ? 'bg-yellow-400' : defense < 1 ? 'bg-green-500' : defense > 1 ? 'bg-red-500' : '';
+          const offenseColor = offenseHighlights.has(type.name) ? 'bg-yellow-400' : offense > 1 ? 'bg-green-500' : '';
+          const defenseColor = defenseHighlights.has(type.name) ? 'bg-yellow-400' : defense < 1 ? 'bg-green-500' : '';
 
           return (
             <div className="flex items-center m-1" key={type.name}>
