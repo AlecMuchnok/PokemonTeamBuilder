@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './App.css'
 import { FilterablePokemonTable } from './PokemonTable';
 import { PokemonTeam } from './PokemonTeam';
 import { TeamCoverage } from './TeamCoverage';
 import { DataContext } from './AppContext';
 import { flattenDamageRelations } from './utilities';
-import type { APIData, Pokemon, Type, Pokedex } from './types';
+import type { APIData, Type, Pokedex } from './types';
 
 export default function App() {
   return (
