@@ -15,33 +15,32 @@ export function formatPokemonName(species: string): string {
 }
 
 export function flattenDamageRelations(damage_relations: DamageRelations) {
-  // Maps type name to effectiveness
-  const offense : Map<string, number> = new Map();
+  const offense : Record<string, number> = {};
 
   for (const type of damage_relations.double_damage_to) {
-    offense.set(type.name, 2);
+    offense[type.name] = 2;
   }
 
   for (const type of damage_relations.half_damage_to) {
-    offense.set(type.name, 0.5);
+    offense[type.name] = 0.5;
   }
 
   for (const type of damage_relations.no_damage_to) {
-    offense.set(type.name, 0);
+    offense[type.name] = 0;
   }
 
-  const defense : Map<string, number> = new Map();
+  const defense : Record<string, number> = {};
 
   for (const type of damage_relations.double_damage_from) {
-    defense.set(type.name, 2);
+    defense[type.name] = 2;
   }
 
   for (const type of damage_relations.half_damage_from) {
-    defense.set(type.name, 0.5);
+    defense[type.name] = 0.5;
   }
 
   for (const type of damage_relations.no_damage_from) {
-    defense.set(type.name, 0);
+    defense[type.name] = 0;
   }
 
   return { offense, defense }

@@ -4,7 +4,8 @@ import { DataContext } from './AppContext';
 import { formatPokemonName } from './utilities';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from './store/store';
-import { addToTeam } from './features/teamSlice';
+import { addToTeam } from './store/teamSlice';
+import { useGetAllPokemonQuery } from './services/pokeApi';
 
 export function FilterablePokemonTable() {
   const [filterText, setFilterText] = useState('');
@@ -13,7 +14,9 @@ export function FilterablePokemonTable() {
   const [pokedex, setPokedex] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(calcRowsPerPage);
-  const { allPokemon, allTypes, allPokedexes, idToSpecies } = useContext(DataContext);
+  const { allTypes, allPokedexes, idToSpecies } = useContext(DataContext);
+
+  const { data, error, isLoading } = useGetAllPokemonQuery();
 
   useEffect(() => {
     function handleResize() {
@@ -31,6 +34,16 @@ export function FilterablePokemonTable() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  if (error) {
+    return (
+      <div>There was an error retrieving Pokemon...</div>
+    );
+  } else if(isLoading) {
+    return (
+      <div>Loading Pokemon...</div>
+    );
+  }
 
   function handleFilterTextChange(text: string) {
     setFilterText(text);
@@ -57,17 +70,20 @@ export function FilterablePokemonTable() {
   const matchedPokedex = allPokedexes.find((d) => d.name.toLowerCase() === (pokedex || 'national').toLowerCase()) ?? null;
 
   // Filter out special pokemon (id > 10000)
-  const filteredPokemon = allPokemon.filter((p) => {
-    const parts: string[] = p.url.split('/');
-    const id = +parts[parts.length - 2];
-    if (id > 10000) return false;
-    const species = idToSpecies.get(id) ?? p.name;
-    if (!species.toLowerCase().includes(filterText.toLowerCase())) return false;
-    if (matchedType1 && !matchedType1.pokemon.has(p.name)) return false;
-    if (matchedType2 && !matchedType2.pokemon.has(p.name)) return false;
-    if (matchedPokedex && !matchedPokedex.pokemon.has(species)) return false;
-    return true;
-  });
+  let filteredPokemon : APIData[] = [];
+  if (data && !error && !isLoading) {
+    filteredPokemon = data.filter((p) => {
+      const parts: string[] = p.url.split('/');
+      const id = +parts[parts.length - 2];
+      if (id > 10000) return false;
+      const species = idToSpecies.get(id) ?? p.name;
+      if (!species.toLowerCase().includes(filterText.toLowerCase())) return false;
+      if (matchedType1 && !matchedType1.pokemon.includes(p.name)) return false;
+      if (matchedType2 && !matchedType2.pokemon.includes(p.name)) return false;
+      if (matchedPokedex && !matchedPokedex.pokemon.has(species)) return false;
+      return true;
+    });
+  }
 
   const sortedPokemon = matchedPokedex
     ? [...filteredPokemon].sort((a, b) => {

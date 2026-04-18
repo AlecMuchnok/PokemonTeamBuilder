@@ -42,7 +42,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: typeJson.id,
           name: typeJson.name,
           sprite: typeJson.sprites['generation-ix']['scarlet-violet'].name_icon,
-          pokemon: new Set<string>(typeJson.pokemon.map((entry: { pokemon: { name: string } }) => entry.pokemon.name)),
+          pokemon: new Array<string>(typeJson.pokemon.map((entry: { pokemon: { name: string } }) => entry.pokemon.name)),
           type_effectiveness: flattenDamageRelations(typeJson.damage_relations),
         });
       }

@@ -23,10 +23,10 @@ export function TeamCoverage() {
 
       allTypes.forEach(async (type) => {
         const teamOffense: number[] = teamTypes.map<number>((types) =>
-          types.reduce((acc: number, pType) => Math.max(acc, pType.type_effectiveness.offense.get(type.name) ?? 1), 0)
+          types.reduce((acc: number, pType) => Math.max(acc, pType.type_effectiveness.offense[type.name] ?? 1), 0)
         )
         const teamDefense: number[] = teamTypes.map<number>((types) =>
-          types.reduce((acc: number, pType) => acc * (pType.type_effectiveness.defense.get(type.name) ?? 1), 1)
+          types.reduce((acc: number, pType) => acc * (pType.type_effectiveness.defense[type.name] ?? 1), 1)
         )
 
         coverage.set(type.name, {
@@ -43,12 +43,12 @@ export function TeamCoverage() {
 
   const offenseHighlights: Set<string> = new Set(
     hoveredType
-      ? allTypes.filter(t => (hoveredType.type_effectiveness.defense.get(t.name) ?? 1) === 2).map(t => t.name)
+      ? allTypes.filter(t => (hoveredType.type_effectiveness.defense[t.name] ?? 1) === 2).map(t => t.name)
       : []
   );
   const defenseHighlights: Set<string> = new Set(
     hoveredType
-      ? allTypes.filter(t => (hoveredType.type_effectiveness.offense.get(t.name) ?? 1) <= 0.5).map(t => t.name)
+      ? allTypes.filter(t => (hoveredType.type_effectiveness.offense[t.name] ?? 1) <= 0.5).map(t => t.name)
       : []
   );
 

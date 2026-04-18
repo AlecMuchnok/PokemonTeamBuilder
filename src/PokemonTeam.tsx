@@ -1,6 +1,6 @@
 import type { Pokemon, Type } from './types';
 import { useDispatch, useSelector } from 'react-redux';
-import { removeFromTeam } from './features/teamSlice';
+import { removeFromTeam } from './store/teamSlice';
 import type { RootState } from './store/store';
 
 export function PokemonTeam() {
