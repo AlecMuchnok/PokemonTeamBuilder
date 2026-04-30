@@ -1,11 +1,12 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
 import type { APIData, Pokemon, Pokedex, Type } from './types';
 import { DataContext } from './AppContext';
-import { formatPokemonName } from './utilities';
+import { formatPokemonName, TYPE_IDS } from './utilities';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from './store/store';
 import { addToTeam } from './store/teamSlice';
-import { useGetAllPokedexesQuery, useGetAllPokemonQuery, useGetPokedexQuery } from './services/pokeApi';
+import { skipToken } from '@reduxjs/toolkit/query';
+import { useGetAllPokedexesQuery, useGetAllPokemonQuery, useGetPokedexQuery, useGetTypeQuery } from './services/pokeApi';
 
 export function FilterablePokemonTable() {
   const [filterText, setFilterText] = useState('');
@@ -14,10 +15,12 @@ export function FilterablePokemonTable() {
   const [pokedex, setPokedex] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(calcRowsPerPage);
-  const { allTypes } = useContext(DataContext);
 
   const { data: pokemonData, error: pokemonError, isLoading: isPokemonLoading } = useGetAllPokemonQuery();
   const { data: pokedexData, error: pokedexError, isLoading: isPokedexLoading } = useGetAllPokedexesQuery();
+  const { currentData: matchedType1 } = useGetTypeQuery(TYPE_IDS[type1.toLowerCase()] ?? skipToken);
+  const { currentData: matchedType2 } = useGetTypeQuery(TYPE_IDS[type2.toLowerCase()] ?? skipToken);
+
   const { data: nationalPokedex, isLoading: isNationalLoading, error: nationalError } = useGetPokedexQuery('national');
 
   const idToSpecies = useMemo(() => {
@@ -81,9 +84,6 @@ export function FilterablePokemonTable() {
       <div>Loading data...</div>
     );
   }
-
-  const matchedType1 = allTypes.find((t) => t.name.toLowerCase() === type1.toLowerCase());
-  const matchedType2 = allTypes.find((t) => t.name.toLowerCase() === type2.toLowerCase());
 
   const filteredPokemon : APIData[] = pokemonData?.filter((p) => {
     const parts: string[] = p.url.split('/');

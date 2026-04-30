@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { APIData, Pokedex, Type } from '../types';
 import type { APIResponse } from './apiTypes';
+import { flattenDamageRelations } from '../utilities';
 
 export const pokeApi = createApi({
 	reducerPath: 'pokeApi',
@@ -8,11 +9,11 @@ export const pokeApi = createApi({
 	endpoints: (builder) => ({
 		getAllPokemon: builder.query<APIData[], void>({
 			query: () => 'pokemon?limit=2000',
-			transformResponse: (response: APIResponse<APIData>) => response.results,
+			transformResponse: (response: APIResponse) => response.results,
 		}),
 		getAllPokedexes: builder.query<APIData[], void>({
 			query: () => 'pokedex?limit=100',
-			transformResponse: (response: APIResponse<APIData>) =>
+			transformResponse: (response: APIResponse) =>
 				response.results.map((r) => ({
 					...r,
 					name: r.name
@@ -33,8 +34,21 @@ export const pokeApi = createApi({
 				),
 			}),
 		}),
-		getType: builder.query<Type, number>({
-			query: (id) => `type/${id}`,
+		getType: builder.query<Type, string | number>({
+			query: (idOrName) => `type/${idOrName}`,
+			transformResponse: (response: {
+				id: number;
+				name: string;
+				sprites: { 'generation-ix': { 'scarlet-violet': { name_icon: string } } };
+				pokemon: { pokemon: { name: string } }[];
+				damage_relations: Parameters<typeof flattenDamageRelations>[0];
+			}): Type => ({
+				id: response.id,
+				name: response.name,
+				sprite: response.sprites['generation-ix']['scarlet-violet'].name_icon,
+				pokemon: response.pokemon.map((entry) => entry.pokemon.name),
+				type_effectiveness: flattenDamageRelations(response.damage_relations),
+			}),
 		}),
 	}),
 })
